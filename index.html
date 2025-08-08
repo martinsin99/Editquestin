@@ -120,6 +120,9 @@
             <main id="modal-content" class="p-6 overflow-y-auto"></main>
             <footer class="p-4 border-t flex flex-col sm:flex-row justify-between items-center gap-4 bg-gray-50 rounded-b-xl">
                 <div>
+                    <button id="modal-autoclassify-btn" class="px-4 py-2 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700">Auto-clasificar esta pregunta</button>
+                </div>
+                <div class="flex items-center gap-2">
                     <button id="modal-prev" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed">Anterior</button>
                     <button id="modal-next" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed">Siguiente</button>
                 </div>
@@ -222,6 +225,7 @@
             const modalCancelBtn = document.getElementById('modal-cancel');
             const modalPrevBtn = document.getElementById('modal-prev');
             const modalNextBtn = document.getElementById('modal-next');
+            const modalAutoclassifyBtn = document.getElementById('modal-autoclassify-btn');
             const classifyPopup = document.getElementById('classify-popup');
             const classifySearch = document.getElementById('classify-search');
             const classifyList = document.getElementById('classify-list');
@@ -252,6 +256,53 @@
             const OVERSCAN_COUNT = 5;
             const totalWidth = TABLE_HEADERS.reduce((acc, h) => acc + h.width, 0);
             const CATEGORIES = ["Cardiología", "Dermatología", "Gastroenterología", "Endocrinología", "Hematología", "Infectología", "Nefrología", "Neurología", "Neumología", "Reumatología", "Neonatologia", "Pediatria", "Ginecologia", "Obstetricia", "Cirugia general", "Oftalmologia", "Otorrinolaringología", "Traumatologia", "Urologia", "Psiquiatría", "Salud Pública / Epidemiología", "Bióetica"];
+
+            // --- Smart Category Guessing ---
+            const CATEGORY_KEYWORDS = {
+              "Cardiología": ["cardio", "angina", "infarto", "iam", "ecg", "stent", "fibrilación auricular", "insuficiencia cardiaca", "miocardio", "troponina", "bradicardia", "taquicardia"],
+              "Dermatología": ["piel", "placas", "prurito", "dermatitis", "psoriasis", "melanoma", "nevus", "lesión cutánea", "queratosis"],
+              "Gastroenterología": ["abdomen", "hepatitis", "cirrosis", "ascitis", "colon", "diarrea", "hematoquezia", "melena", "pancreatitis", "ictericia", "disfagia", "reflujo"],
+              "Endocrinología": ["tiroid", "hiper", "hipo", "diabetes", "cetoacidosis", "cortisol", "cushing", "addison", "prolactina"],
+              "Hematología": ["anemia", "hemólisis", "leucemia", "linfoma", "trombosis", "hemofilia", "plaquetas", "coagulación"],
+              "Infectología": ["fiebre", "sepsis", "bacteremia", "antibiótico", "vih", "tuberculosis", "neumonía", "meningitis", "absceso"],
+              "Nefrología": ["riñón", "renal", "creatinina", "proteinuria", "hematuria", "glomerulo", "dialisis", "poliuria", "edema"],
+              "Neurología": ["convuls", "ictus", "acv", "migraña", "epilepsia", "parkinson", "esclerosis", "paresia", "afasia", "nistagmo"],
+              "Neumología": ["asma", "epoc", "vni", "oxigeno", "espirometría", "bronco", "tos", "disnea", "hemoptisis"],
+              "Reumatología": ["artritis", "lupus", "vasculitis", "gota", "espondilitis", "sicca", "raynaud", "anticuerpos"],
+              "Neonatologia": ["neonato", "recién nacido", "apgar", "hiperbilirrubinemia", "prematuro"],
+              "Pediatria": ["niño", "pediátr", "lactante", "adolescente", "vacuna", "otitis", "faringitis"],
+              "Ginecologia": ["gineco", "papanicolau", "vph", "metrorragia", "mioma", "ovario", "mamografía"],
+              "Obstetricia": ["gesta", "semanas", "embarazo", "parto", "preclampsia", "amniorrea", "feto", "dilatación", "borrado"],
+              "Cirugia general": ["cirugía", "quirúrg", "abdomen agudo", "hernias", "apendicitis", "colecistitis"],
+              "Oftalmologia": ["ojo", "conjuntivitis", "glaucoma", "retina", "visión"],
+              "Otorrinolaringología": ["oído", "otitis", "amigdal", "sinusitis", "faring", "ronquido", "epistaxis"],
+              "Traumatologia": ["fractura", "luxación", "rotuliana", "menisco", "columna", "osteoporosis"],
+              "Urologia": ["próstata", "litiasis", "cólico", "vejiga", "incontinencia", "disuria"],
+              "Psiquiatría": ["depres", "ansiedad", "bipolar", "psicosis", "esquizofrenia", "suicidio"],
+              "Salud Pública / Epidemiología": ["incidencia", "prevalencia", "riesgo relativo", "odds", "sesgo", "screening", "brotes"],
+              "Bióetica": ["consentimiento", "autonomía", "beneficencia", "no maleficencia", "confidencialidad"]
+            };
+            function stripHtml(html) {
+                const doc = new DOMParser().parseFromString(html || '', 'text/html');
+                return doc.body.textContent || "";
+            }
+            function normalize(s) {
+              return (s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            }
+            function guessCategoryForQuestion(q) {
+              const text = normalize(stripHtml([q.text, q.option_a, q.option_b, q.option_c, q.option_d, q.justification].join(" ")));
+              let bestCat = null, bestScore = 0;
+              for (const [cat, kws] of Object.entries(CATEGORY_KEYWORDS)) {
+                let score = 0;
+                for (const kw of kws) {
+                  const re = new RegExp(`\\b${normalize(kw)}`, "g");
+                  const matches = text.match(re);
+                  if (matches) score += matches.length;
+                }
+                if (score > bestScore) { bestScore = score; bestCat = cat; }
+              }
+              return bestScore >= 2 ? bestCat : "";
+            }
 
             // --- Core Functions ---
 
@@ -403,12 +454,22 @@
                             options.push(ans.querySelector("text")?.innerHTML || '');
                             if (parseFloat(ans.getAttribute("fraction")) === 100) correctAnswerId = String.fromCharCode(97 + index); 
                         });
+                        
+                        const tempQuestion = { 
+                          text: questionTextNode?.innerHTML || '',
+                          option_a: options[0] || '', option_b: options[1] || '',
+                          option_c: options[2] || '', option_d: options[3] || '',
+                          justification: justificationNode?.innerHTML || ''
+                        };
+
+                        const predicted = guessCategoryForQuestion(tempQuestion);
+                        const isGenericCategory = !currentCategory || currentCategory.toLowerCase().startsWith('general') || currentCategory.toLowerCase().startsWith('default');
+                        const finalCategory = isGenericCategory ? (predicted || currentCategory) : currentCategory;
 
                         return {
-                            id: `q_${Date.now()}_${Math.random()}`, text: questionTextNode?.innerHTML || '',
-                            option_a: options[0] || '', option_b: options[1] || '', option_c: options[2] || '', option_d: options[3] || '',
-                            correctAnswerId, category: currentCategory, year: new Date().getFullYear().toString(),
-                            justification: justificationNode?.innerHTML || '', examType: '', topic: '',
+                            id: `q_${Date.now()}_${Math.random()}`, ...tempQuestion,
+                            correctAnswerId, category: finalCategory, year: new Date().getFullYear().toString(),
+                            examType: '', topic: finalCategory,
                         };
                     });
 
@@ -478,6 +539,11 @@
                         const question = {};
                         headers.forEach((header, i) => { question[header] = values[i] || ''; });
                         question.id = `q_${Date.now()}_${Math.random()}`;
+                        
+                        if (!question.category) {
+                          const predicted = guessCategoryForQuestion(question);
+                          if (predicted) { question.category = predicted; question.topic = predicted; }
+                        }
                         return question;
                     }).filter(Boolean);
                     
@@ -883,6 +949,22 @@
                 
                 batchEditModalContainer.classList.add('hidden');
                 updateUI();
+            });
+            
+            modalAutoclassifyBtn.addEventListener('click', () => {
+                if (editingQuestionIndex === null) return;
+                const currentQuestion = {};
+                modalContent.querySelectorAll('[data-field]').forEach(input => {
+                    currentQuestion[input.dataset.field] = input.value;
+                });
+
+                const predicted = guessCategoryForQuestion(currentQuestion);
+                if (predicted) {
+                    modalContent.querySelector('[data-field="category"]').value = predicted;
+                    modalContent.querySelector('[data-field="topic"]').value = predicted;
+                } else {
+                    alert('No se pudo determinar una categoría clara para esta pregunta.');
+                }
             });
 
             // --- History (Undo/Redo) and Autosave Logic ---
