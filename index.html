@@ -69,6 +69,7 @@
                 <button id="import-paste-btn" class="flex items-center px-4 py-2 bg-yellow-500 text-white font-semibold rounded-lg shadow-md hover:bg-yellow-600">Pegar CSV</button>
                 <button id="import-xml-btn" class="flex items-center px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700">Importar XML</button>
                 <button id="import-csv-btn" class="flex items-center px-4 py-2 bg-teal-600 text-white font-semibold rounded-lg shadow-md hover:bg-teal-700">Importar CSV</button>
+                <button id="autoclassify-btn" class="flex items-center px-4 py-2 bg-purple-600 text-white font-semibold rounded-lg shadow-md hover:bg-purple-700 disabled:bg-gray-400">Auto-clasificar</button>
                 <button id="export-btn" class="flex items-center px-4 py-2 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700 disabled:bg-gray-400" disabled>Exportar</button>
             </div>
         </div>
@@ -213,6 +214,7 @@
             const tableView = document.getElementById('table-view');
             const textView = document.getElementById('text-view');
             const textViewArea = document.getElementById('text-view-area');
+            const autoclassifyBtn = document.getElementById('autoclassify-btn');
             const globalYearInput = document.getElementById('global-year');
             const globalExamInput = document.getElementById('global-exam');
             const globalCategoryInput = document.getElementById('global-category');
@@ -259,28 +261,28 @@
 
             // --- Smart Category Guessing ---
             const CATEGORY_KEYWORDS = {
-              "Cardiología": ["cardio", "angina", "infarto", "iam", "ecg", "stent", "fibrilación auricular", "insuficiencia cardiaca", "miocardio", "troponina", "bradicardia", "taquicardia"],
-              "Dermatología": ["piel", "placas", "prurito", "dermatitis", "psoriasis", "melanoma", "nevus", "lesión cutánea", "queratosis"],
-              "Gastroenterología": ["abdomen", "hepatitis", "cirrosis", "ascitis", "colon", "diarrea", "hematoquezia", "melena", "pancreatitis", "ictericia", "disfagia", "reflujo"],
-              "Endocrinología": ["tiroid", "hiper", "hipo", "diabetes", "cetoacidosis", "cortisol", "cushing", "addison", "prolactina"],
-              "Hematología": ["anemia", "hemólisis", "leucemia", "linfoma", "trombosis", "hemofilia", "plaquetas", "coagulación"],
-              "Infectología": ["fiebre", "sepsis", "bacteremia", "antibiótico", "vih", "tuberculosis", "neumonía", "meningitis", "absceso"],
-              "Nefrología": ["riñón", "renal", "creatinina", "proteinuria", "hematuria", "glomerulo", "dialisis", "poliuria", "edema"],
-              "Neurología": ["convuls", "ictus", "acv", "migraña", "epilepsia", "parkinson", "esclerosis", "paresia", "afasia", "nistagmo"],
-              "Neumología": ["asma", "epoc", "vni", "oxigeno", "espirometría", "bronco", "tos", "disnea", "hemoptisis"],
-              "Reumatología": ["artritis", "lupus", "vasculitis", "gota", "espondilitis", "sicca", "raynaud", "anticuerpos"],
+              "Cardiología": ["cardio", "angina", "infarto", "iam", "ecg", "stent", "fibrilación auricular", "insuficiencia cardiaca", "miocardio", "troponina", "bradicardia", "taquicardia", "presión arterial", "hipertensión", "ecocardiograma", "cateterismo", "marcapasos", "válvula", "aorta", "arteria coronaria"],
+              "Dermatología": ["piel", "placas", "prurito", "dermatitis", "psoriasis", "melanoma", "nevus", "lesión cutánea", "queratosis", "urticaria", "acné", "eccema"],
+              "Gastroenterología": ["abdomen", "hepatitis", "cirrosis", "ascitis", "colon", "diarrea", "hematoquezia", "melena", "pancreatitis", "ictericia", "disfagia", "reflujo", "esófago", "estómago", "intestino", "endoscopia", "colonoscopia", "úlcera", "crohn", "colitis"],
+              "Endocrinología": ["tiroid", "hiper", "hipo", "diabetes", "cetoacidosis", "cortisol", "cushing", "addison", "prolactina", "insulina", "glucagón", "glándula", "suprarrenal", "pituitaria", "paratiroides"],
+              "Hematología": ["anemia", "hemólisis", "leucemia", "linfoma", "trombosis", "hemofilia", "plaquetas", "coagulación", "hemoglobina", "hematocrito", "glóbulos rojos", "glóbulos blancos", "mieloma"],
+              "Infectología": ["fiebre", "sepsis", "bacteremia", "antibiótico", "vih", "tuberculosis", "neumonía", "meningitis", "absceso", "virus", "bacteria", "hongo", "parásito", "cultivo", "antiviral", "antifúngico"],
+              "Nefrología": ["riñón", "renal", "creatinina", "proteinuria", "hematuria", "glomerulo", "dialisis", "poliuria", "edema", "urea", "diuresis", "oliguria", "insuficiencia renal aguda", "insuficiencia renal crónica"],
+              "Neurología": ["convuls", "ictus", "acv", "migraña", "epilepsia", "parkinson", "esclerosis", "paresia", "afasia", "nistagmo", "cefalea", "hemiparesia", "hemiplejia", "vértigo", "meninges", "líquido cefalorraquídeo", "glasgow"],
+              "Neumología": ["asma", "epoc", "vni", "oxigeno", "espirometría", "bronco", "tos", "disnea", "hemoptisis", "pulmón", "pulmonar", "esputo", "sibilancias", "roncus", "crepitantes", "pleura"],
+              "Reumatología": ["artritis", "lupus", "vasculitis", "gota", "espondilitis", "sicca", "raynaud", "anticuerpos", "artralgia", "mialgia", "factor reumatoide", "sjogren"],
               "Neonatologia": ["neonato", "recién nacido", "apgar", "hiperbilirrubinemia", "prematuro"],
               "Pediatria": ["niño", "pediátr", "lactante", "adolescente", "vacuna", "otitis", "faringitis"],
-              "Ginecologia": ["gineco", "papanicolau", "vph", "metrorragia", "mioma", "ovario", "mamografía"],
-              "Obstetricia": ["gesta", "semanas", "embarazo", "parto", "preclampsia", "amniorrea", "feto", "dilatación", "borrado"],
-              "Cirugia general": ["cirugía", "quirúrg", "abdomen agudo", "hernias", "apendicitis", "colecistitis"],
-              "Oftalmologia": ["ojo", "conjuntivitis", "glaucoma", "retina", "visión"],
-              "Otorrinolaringología": ["oído", "otitis", "amigdal", "sinusitis", "faring", "ronquido", "epistaxis"],
-              "Traumatologia": ["fractura", "luxación", "rotuliana", "menisco", "columna", "osteoporosis"],
-              "Urologia": ["próstata", "litiasis", "cólico", "vejiga", "incontinencia", "disuria"],
-              "Psiquiatría": ["depres", "ansiedad", "bipolar", "psicosis", "esquizofrenia", "suicidio"],
-              "Salud Pública / Epidemiología": ["incidencia", "prevalencia", "riesgo relativo", "odds", "sesgo", "screening", "brotes"],
-              "Bióetica": ["consentimiento", "autonomía", "beneficencia", "no maleficencia", "confidencialidad"]
+              "Ginecologia": ["gineco", "papanicolau", "vph", "metrorragia", "mioma", "ovario", "mamografía", "útero", "cérvix", "menstruación", "amenorrea"],
+              "Obstetricia": ["gesta", "semanas", "embarazo", "parto", "preclampsia", "amniorrea", "feto", "dilatación", "borrado", "cesárea", "puerperio"],
+              "Cirugia general": ["cirugía", "quirúrg", "abdomen agudo", "hernias", "apendicitis", "colecistitis", "laparotomía", "laparoscopia", "postoperatorio", "sutura"],
+              "Oftalmologia": ["ojo", "conjuntivitis", "glaucoma", "retina", "visión", "agudeza visual", "córnea"],
+              "Otorrinolaringología": ["oído", "otitis", "amigdal", "sinusitis", "faring", "ronquido", "epistaxis", "vértigo periférico", "hipoacusia"],
+              "Traumatologia": ["fractura", "luxación", "rotuliana", "menisco", "columna", "osteoporosis", "hueso", "esguince", "articulación", "ligamento", "tendón", "ortopedia"],
+              "Urologia": ["próstata", "litiasis", "cólico", "vejiga", "incontinencia", "disuria", "hematuria", "psa"],
+              "Psiquiatría": ["depres", "ansiedad", "bipolar", "psicosis", "esquizofrenia", "suicidio", "antidepresivo", "antipsicótico"],
+              "Salud Pública / Epidemiología": ["incidencia", "prevalencia", "riesgo relativo", "odds", "sesgo", "screening", "brotes", "epidemia", "pandemia"],
+              "Bióetica": ["consentimiento", "autonomía", "beneficencia", "no maleficencia", "confidencialidad", "justicia distributiva"]
             };
             function stripHtml(html) {
                 const doc = new DOMParser().parseFromString(html || '', 'text/html');
@@ -301,7 +303,7 @@
                 }
                 if (score > bestScore) { bestScore = score; bestCat = cat; }
               }
-              return bestScore >= 2 ? bestCat : "";
+              return bestScore > 0 ? bestCat : "";
             }
 
             // --- Core Functions ---
@@ -965,6 +967,22 @@
                 } else {
                     alert('No se pudo determinar una categoría clara para esta pregunta.');
                 }
+            });
+
+            autoclassifyBtn.addEventListener('click', () => {
+              if (questions.length === 0) return alert("Importa un archivo primero.");
+              pushState(questions);
+              let changed = 0;
+              questions.forEach(q => {
+                const predicted = guessCategoryForQuestion(q);
+                if (predicted) { 
+                    q.category = predicted; 
+                    q.topic = predicted; 
+                    changed++; 
+                }
+              });
+              updateUI();
+              alert(`Auto-clasificación aplicada. Filas actualizadas: ${changed}`);
             });
 
             // --- History (Undo/Redo) and Autosave Logic ---
