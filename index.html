@@ -33,6 +33,14 @@
             from { opacity: 1; }
             to { opacity: 0; }
         }
+        .keyword-tab-btn.active {
+            background-color: #3B82F6; /* blue-500 */
+            color: white;
+        }
+        .keyword-tab-btn:not(.active) {
+            background-color: #E5E7EB; /* gray-200 */
+            color: #374151; /* gray-700 */
+        }
     </style>
 </head>
 <body class="bg-gray-100 font-sans flex flex-col h-screen">
@@ -41,7 +49,9 @@
     <header class="bg-white shadow-md p-4 z-20">
         <div class="max-w-screen-2xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
             <div class="text-center sm:text-left">
-                <h1 class="text-2xl font-bold text-gray-800">Editor de Preguntas Moodle</h1>
+                <div id="title-container">
+                    <h1 id="app-title" class="text-2xl font-bold text-gray-800 cursor-pointer hover:bg-gray-100 p-1 rounded-md transition-colors">Editor de Preguntas Moodle</h1>
+                </div>
                 <p class="text-sm text-gray-500">Virtualizado para Máximo Rendimiento</p>
             </div>
             <div class="flex items-center justify-center flex-wrap gap-2">
@@ -62,7 +72,7 @@
                     <span id="save-feedback" class="absolute -top-6 left-1/2 -translate-x-1/2 text-xs bg-green-500 text-white px-2 py-1 rounded-md opacity-0">Guardado</span>
                 </div>
                 <button id="settings-btn" class="p-2 rounded-lg hover:bg-gray-200 transition-colors" title="Edición Masiva">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0 3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                 </button>
                 <input type="file" id="xml-file-input" class="hidden" accept=".xml"/>
                 <input type="file" id="csv-file-input" class="hidden" accept=".csv"/>
@@ -70,16 +80,23 @@
                 <button id="import-xml-btn" class="flex items-center px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700">Importar XML</button>
                 <button id="import-csv-btn" class="flex items-center px-4 py-2 bg-teal-600 text-white font-semibold rounded-lg shadow-md hover:bg-teal-700">Importar CSV</button>
                 <button id="autoclassify-btn" class="flex items-center px-4 py-2 bg-purple-600 text-white font-semibold rounded-lg shadow-md hover:bg-purple-700 disabled:bg-gray-400">Auto-clasificar</button>
+                <button id="edit-keywords-btn" class="p-2 rounded-lg hover:bg-gray-200 transition-colors" title="Editar Pistas de Clasificación">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v11.494m-5.747-8.56l11.494 5.747m-5.747-11.494L6.253 18m11.494-11.494L6.253 6.253"></path></svg>
+                </button>
                 <button id="export-btn" class="flex items-center px-4 py-2 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700 disabled:bg-gray-400" disabled>Exportar</button>
+                <button id="clear-all-btn" class="p-2 rounded-lg hover:bg-red-100 text-red-600 transition-colors" title="Borrar Todo">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                </button>
             </div>
         </div>
         <div id="settings-bar" class="transition-all duration-300 ease-in-out overflow-hidden max-h-0">
-            <div class="bg-gray-50 p-4 rounded-lg border mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+            <div class="bg-gray-50 p-4 rounded-lg border mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 items-end">
                 <h3 class="font-semibold text-gray-700 col-span-full">Edición Masiva:</h3>
                 <div><label class="block text-xs font-medium text-gray-600">Año</label><input type="text" id="global-year" placeholder="Ej: 2025" class="p-2 border rounded-md text-sm w-full"/></div>
                 <div><label class="block text-xs font-medium text-gray-600">Tipo de Examen</label><input type="text" id="global-exam" placeholder="Ej: Parcial 1" class="p-2 border rounded-md text-sm w-full"/></div>
                 <div><label class="block text-xs font-medium text-gray-600">Categoría/Materia</label><input type="text" id="global-category" placeholder="Ej: Medicina" class="p-2 border rounded-md text-sm w-full"/></div>
                 <div><label class="block text-xs font-medium text-gray-600">Tema</label><input type="text" id="global-topic" placeholder="Ej: Cardiología" class="p-2 border rounded-md text-sm w-full"/></div>
+                <div><label class="block text-xs font-medium text-gray-600">Carrera</label><input type="text" id="global-career" placeholder="Medicina" class="p-2 border rounded-md text-sm w-full"/></div>
                 <button id="apply-massive-edit" class="px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 w-full sm:col-span-2 lg:col-span-1">Aplicar a Todo</button>
             </div>
         </div>
@@ -121,7 +138,7 @@
             <main id="modal-content" class="p-6 overflow-y-auto"></main>
             <footer class="p-4 border-t flex flex-col sm:flex-row justify-between items-center gap-4 bg-gray-50 rounded-b-xl">
                 <div>
-                    <button id="modal-autoclassify-btn" class="px-4 py-2 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700">Auto-clasificar esta pregunta</button>
+                    <button id="modal-autoclassify-btn" class="px-4 py-2 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700">Auto-clasificar Categoría</button>
                 </div>
                 <div class="flex items-center gap-2">
                     <button id="modal-prev" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed">Anterior</button>
@@ -141,7 +158,7 @@
             <header class="p-4 border-b"><h2 class="text-xl font-bold text-gray-800">Pegar Contenido CSV</h2></header>
             <main class="p-6">
                 <p class="text-sm text-gray-600 mb-2">Pega aquí las filas de tu CSV. Asegúrate de que el formato y las columnas coincidan con la exportación.</p>
-                <textarea id="paste-csv-area" class="w-full h-64 p-2 border rounded-md font-mono text-sm" placeholder="text,option_a,option_b,..."></textarea>
+                <textarea id="paste-csv-area" class="w-full h-64 p-2 border rounded-md font-mono text-sm" placeholder="text,option_a,option_b,...,career"></textarea>
             </main>
             <footer class="p-4 border-t flex justify-end space-x-3 bg-gray-50 rounded-b-xl">
                 <button id="paste-cancel-btn" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">Cancelar</button>
@@ -160,6 +177,7 @@
                 <div><label class="block text-xs font-medium text-gray-600">Tipo de Examen</label><input type="text" id="batch-exam" placeholder="Ej: Parcial 1" class="p-2 border rounded-md text-sm w-full"/></div>
                 <div><label class="block text-xs font-medium text-gray-600">Categoría/Materia</label><input type="text" id="batch-category" placeholder="Ej: Medicina" class="p-2 border rounded-md text-sm w-full"/></div>
                 <div><label class="block text-xs font-medium text-gray-600">Tema</label><input type="text" id="batch-topic" placeholder="Ej: Cardiología" class="p-2 border rounded-md text-sm w-full"/></div>
+                <div><label class="block text-xs font-medium text-gray-600">Carrera</label><input type="text" id="batch-career-modal" placeholder="Medicina" class="p-2 border rounded-md text-sm w-full"/></div>
             </main>
             <footer class="p-4 border-t flex justify-end space-x-3 bg-gray-50 rounded-b-xl">
                 <button id="batch-edit-cancel-btn" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">Cancelar</button>
@@ -173,6 +191,31 @@
         <div class="bg-white rounded-xl shadow-xl flex flex-col w-full max-w-md max-h-[80vh]">
             <input type="text" id="classify-search" class="p-3 border-b focus:outline-none text-lg" placeholder="Buscar categoría...">
             <div id="classify-list" class="p-2 overflow-y-auto"></div>
+        </div>
+    </div>
+    
+    <!-- Modal para Editar Pistas de Auto-clasificación -->
+    <div id="keywords-modal-container" class="hidden fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+            <header class="p-4 border-b">
+                <h2 class="text-xl font-bold text-gray-800">Editar Pistas de Auto-clasificación</h2>
+            </header>
+            <nav class="p-2 border-b">
+                <div id="keywords-tabs" class="flex space-x-2">
+                    <button data-career="Medicina" class="keyword-tab-btn px-4 py-2 rounded-md font-semibold">Medicina</button>
+                    <button data-career="Enfermeria" class="keyword-tab-btn px-4 py-2 rounded-md font-semibold">Enfermería</button>
+                </div>
+            </nav>
+            <main id="keywords-content" class="p-6 overflow-y-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Content will be generated by JS -->
+            </main>
+            <footer class="p-4 border-t flex justify-between items-center bg-gray-50 rounded-b-xl">
+                <button id="keywords-restore-btn" class="px-4 py-2 bg-yellow-500 text-white font-semibold rounded-lg hover:bg-yellow-600">Restaurar por Defecto</button>
+                <div>
+                    <button id="keywords-cancel-btn" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">Cancelar</button>
+                    <button id="keywords-save-btn" class="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700">Guardar Cambios</button>
+                </div>
+            </footer>
         </div>
     </div>
 
@@ -215,10 +258,13 @@
             const textView = document.getElementById('text-view');
             const textViewArea = document.getElementById('text-view-area');
             const autoclassifyBtn = document.getElementById('autoclassify-btn');
+            const titleContainer = document.getElementById('title-container');
+            const appTitle = document.getElementById('app-title');
             const globalYearInput = document.getElementById('global-year');
             const globalExamInput = document.getElementById('global-exam');
             const globalCategoryInput = document.getElementById('global-category');
             const globalTopicInput = document.getElementById('global-topic');
+            const globalCareerInput = document.getElementById('global-career');
             const applyMassiveEditBtn = document.getElementById('apply-massive-edit');
             const modalContainer = document.getElementById('modal-container');
             const modalTitle = document.getElementById('modal-title');
@@ -242,6 +288,14 @@
             const batchEditModalContainer = document.getElementById('batch-edit-modal-container');
             const batchEditCancelBtn = document.getElementById('batch-edit-cancel-btn');
             const batchEditApplyBtn = document.getElementById('batch-edit-apply-btn');
+            const clearAllBtn = document.getElementById('clear-all-btn');
+            const editKeywordsBtn = document.getElementById('edit-keywords-btn');
+            const keywordsModalContainer = document.getElementById('keywords-modal-container');
+            const keywordsTabs = document.getElementById('keywords-tabs');
+            const keywordsContent = document.getElementById('keywords-content');
+            const keywordsSaveBtn = document.getElementById('keywords-save-btn');
+            const keywordsCancelBtn = document.getElementById('keywords-cancel-btn');
+            const keywordsRestoreBtn = document.getElementById('keywords-restore-btn');
             
             // --- Table & Virtualization Config ---
             const TABLE_HEADERS = [
@@ -252,15 +306,18 @@
                 { key: 'option_c', label: 'Opción C', width: 200 }, { key: 'option_d', label: 'Opción D', width: 200 },
                 { key: 'correctAnswerId', label: 'Resp. Correcta', width: 120 }, { key: 'category', label: 'Categoría', width: 150 },
                 { key: 'year', label: 'Año', width: 100 }, { key: 'examType', label: 'Tipo Examen', width: 150 },
-                { key: 'topic', label: 'Tema', width: 150 }, { key: 'justification', label: 'Justificación', width: 400 }
+                { key: 'topic', label: 'Tema', width: 150 }, { key: 'justification', label: 'Justificación', width: 400 },
+                { key: 'career', label: 'Carrera', width: 150 }
             ];
             const ROW_HEIGHT = 95;
             const OVERSCAN_COUNT = 5;
             const totalWidth = TABLE_HEADERS.reduce((acc, h) => acc + h.width, 0);
-            const CATEGORIES = ["Cardiología", "Dermatología", "Gastroenterología", "Endocrinología", "Hematología", "Infectología", "Nefrología", "Neurología", "Neumología", "Reumatología", "Neonatologia", "Pediatria", "Ginecologia", "Obstetricia", "Cirugia general", "Oftalmologia", "Otorrinolaringología", "Traumatologia", "Urologia", "Psiquiatría", "Salud Pública / Epidemiología", "Bióetica"];
+            
+            const MEDICINE_CATEGORIES = ["Cardiología", "Dermatología", "Gastroenterología", "Endocrinología", "Hematología", "Infectología", "Nefrología", "Neurología", "Neumología", "Reumatología", "Neonatologia", "Pediatria", "Ginecologia", "Obstetricia", "Cirugia general", "Oftalmologia", "Otorrinolaringología", "Traumatologia", "Urologia", "Psiquiatría", "Salud Pública / Epidemiología", "Bióetica"];
+            const NURSING_CATEGORIES = ["Generalidades para el cuidado enfermero", "Procedimientos básicos del cuidado enfermero", "Proceso de atención en Enfermería", "Bioseguridad", "Ética en el ejercicio profesional", "Seguridad y calidad en el cuidado", "Salud sexual y reproductiva", "Salud sexual y reproductiva de la mujer", "Cuidados de enfermería en el embarazo, parto y puerperio", "Cuidados gineco-obstétricos de la mujer", "Cuidados de enfermería en el recién nacido", "Generalidades sobre niñez y adolescencia", "Cuidados de enfermería en la niñez y adolescencia", "Generalidades del cuidado de enfermería del adulto y adulto mayor", "Cuidados de enfermería en el adulto y adulto mayor", "Cuidados de enfermería a personas con problemas quirúrgicos más frecuentes", "Procedimientos básicos del cuidado enfermero en pacientes adultos y adultos mayores", "Generalidades sobre el cuidado familiar y comunitario", "Bases para el cuidado familiar y comunitario", "La enfermería en el trabajo familiar y comunitario", "Educación para la salud", "Bases administrativas del cuidado", "Bases de investigación científica: metodología de investigación", "Bases epidemiológicas del cuidado: vigilancia epidemiológica"];
 
             // --- Smart Category Guessing ---
-            const CATEGORY_KEYWORDS = {
+            const MEDICINE_CATEGORY_KEYWORDS = {
               "Cardiología": ["cardio", "angina", "infarto", "iam", "ecg", "stent", "fibrilación auricular", "insuficiencia cardiaca", "miocardio", "troponina", "bradicardia", "taquicardia", "presión arterial", "hipertensión", "ecocardiograma", "cateterismo", "marcapasos", "válvula", "aorta", "arteria coronaria"],
               "Dermatología": ["piel", "placas", "prurito", "dermatitis", "psoriasis", "melanoma", "nevus", "lesión cutánea", "queratosis", "urticaria", "acné", "eccema"],
               "Gastroenterología": ["abdomen", "hepatitis", "cirrosis", "ascitis", "colon", "diarrea", "hematoquezia", "melena", "pancreatitis", "ictericia", "disfagia", "reflujo", "esófago", "estómago", "intestino", "endoscopia", "colonoscopia", "úlcera", "crohn", "colitis"],
@@ -284,6 +341,37 @@
               "Salud Pública / Epidemiología": ["incidencia", "prevalencia", "riesgo relativo", "odds", "sesgo", "screening", "brotes", "epidemia", "pandemia"],
               "Bióetica": ["consentimiento", "autonomía", "beneficencia", "no maleficencia", "confidencialidad", "justicia distributiva"]
             };
+
+            const NURSING_CATEGORY_KEYWORDS = {
+              "Generalidades para el cuidado enfermero": ["cuidado enfermero", "fundamentos", "generalidades"],
+              "Procedimientos básicos del cuidado enfermero": ["procedimiento", "técnica", "venoclisis", "cateterismo", "canalización"],
+              "Proceso de atención en Enfermería": ["PAE", "proceso de atención", "valoración", "diagnóstico de enfermería", "NANDA", "NOC", "NIC"],
+              "Bioseguridad": ["bioseguridad", "guantes", "mascarilla", "desinfección", "esterilización", "lavado de manos", "EPI"],
+              "Ética en el ejercicio profesional": ["ética", "deontología", "código ético", "confidencialidad", "secreto profesional"],
+              "Seguridad y calidad en el cuidado": ["seguridad del paciente", "calidad asistencial", "evento adverso", "error de medicación"],
+              "Salud sexual y reproductiva": ["salud sexual", "salud reproductiva", "anticonceptivos", "ITS", "ETS", "planificación familiar"],
+              "Salud sexual y reproductiva de la mujer": ["mujer", "papanicolau", "VPH", "salud ginecológica"],
+              "Cuidados de enfermería en el embarazo, parto y puerperio": ["embarazo", "parto", "puerperio", "gestante", "feto", "lactancia materna", "cuidado prenatal"],
+              "Cuidados gineco-obstétricos de la mujer": ["gineco-obstétrico", "cuidado ginecológico", "cuidado obstétrico"],
+              "Cuidados de enfermería en el recién nacido": ["recién nacido", "neonato", "APGAR", "ictericia", "cuidado del cordón umbilical"],
+              "Generalidades sobre niñez y adolescencia": ["niñez", "adolescencia", "crecimiento y desarrollo", "desarrollo infantil"],
+              "Cuidados de enfermería en la niñez y adolescencia": ["pediatría", "cuidado pediátrico", "vacunación infantil", "salud escolar"],
+              "Generalidades del cuidado de enfermería del adulto y adulto mayor": ["adulto", "adulto mayor", "anciano", "envejecimiento", "geriatría", "gerontología"],
+              "Cuidados de enfermería en el adulto y adulto mayor": ["cuidado del adulto", "enfermedad crónica", "polifarmacia", "cuidado geriátrico"],
+              "Cuidados de enfermería a personas con problemas quirúrgicos más frecuentes": ["quirúrgico", "cirugía", "preoperatorio", "postoperatorio", "cuidado de herida", "drenaje"],
+              "Procedimientos básicos del cuidado enfermero en pacientes adultos y adultos mayores": ["procedimiento en adulto", "sonda nasogástrica", "curación de úlceras"],
+              "Generalidades sobre el cuidado familiar y comunitario": ["salud familiar", "salud comunitaria", "atención primaria de salud"],
+              "Bases para el cuidado familiar y comunitario": ["visita domiciliaria", "modelo de atención integral"],
+              "La enfermería en el trabajo familiar y comunitario": ["enfermería comunitaria", "promoción de la salud", "prevención de la enfermedad"],
+              "Educación para la salud": ["educación sanitaria", "charla educativa", "fomento del autocuidado"],
+              "Bases administrativas del cuidado": ["administración de servicios", "gestión del cuidado", "liderazgo en enfermería"],
+              "Bases de investigación científica: metodología de investigación": ["investigación en enfermería", "metodología", "estudio científico"],
+              "Bases epidemiológicas del cuidado: vigilancia epidemiológica": ["epidemiología", "vigilancia epidemiológica", "notificación de enfermedades"]
+            };
+
+            let userMedicineKeywords = {};
+            let userNursingKeywords = {};
+
             function stripHtml(html) {
                 const doc = new DOMParser().parseFromString(html || '', 'text/html');
                 return doc.body.textContent || "";
@@ -291,19 +379,27 @@
             function normalize(s) {
               return (s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
             }
-            function guessCategoryForQuestion(q) {
-              const text = normalize(stripHtml([q.text, q.option_a, q.option_b, q.option_c, q.option_d, q.justification].join(" ")));
-              let bestCat = null, bestScore = 0;
-              for (const [cat, kws] of Object.entries(CATEGORY_KEYWORDS)) {
-                let score = 0;
-                for (const kw of kws) {
-                  const re = new RegExp(`\\b${normalize(kw)}`, "g");
-                  const matches = text.match(re);
-                  if (matches) score += matches.length;
+            
+            function guessCategoryForQuestion(q, career) {
+                const text = normalize(stripHtml([q.text, q.option_a, q.option_b, q.option_c, q.option_d, q.justification].join(" ")));
+                let keywordSet = {};
+                let careerNormalized = (career || "").toLowerCase();
+
+                if (careerNormalized === "medicina") keywordSet = userMedicineKeywords;
+                else if (careerNormalized === "enfermeria") keywordSet = userNursingKeywords;
+                else return ""; // No hay categorías específicas para Odontología o si la carrera no está definida
+
+                let bestCat = null, bestScore = 0;
+                for (const [cat, kws] of Object.entries(keywordSet)) {
+                    let score = 0;
+                    for (const kw of kws) {
+                        const re = new RegExp(`\\b${normalize(kw)}`, "g");
+                        const matches = text.match(re);
+                        if (matches) score += matches.length;
+                    }
+                    if (score > bestScore) { bestScore = score; bestCat = cat; }
                 }
-                if (score > bestScore) { bestScore = score; bestCat = cat; }
-              }
-              return bestScore > 0 ? bestCat : "";
+                return bestScore > 0 ? bestCat : "";
             }
 
             // --- Core Functions ---
@@ -453,25 +549,25 @@
                         let correctAnswerId = '';
                         
                         answerNodes.forEach((ans, index) => {
-                            options.push(ans.querySelector("text")?.innerHTML || '');
+                            options.push(ans.querySelector("text")?.textContent || '');
                             if (parseFloat(ans.getAttribute("fraction")) === 100) correctAnswerId = String.fromCharCode(97 + index); 
                         });
                         
                         const tempQuestion = { 
-                          text: questionTextNode?.innerHTML || '',
+                          text: questionTextNode?.textContent || '',
                           option_a: options[0] || '', option_b: options[1] || '',
                           option_c: options[2] || '', option_d: options[3] || '',
-                          justification: justificationNode?.innerHTML || ''
+                          justification: justificationNode?.textContent || ''
                         };
-
-                        const predicted = guessCategoryForQuestion(tempQuestion);
-                        const isGenericCategory = !currentCategory || currentCategory.toLowerCase().startsWith('general') || currentCategory.toLowerCase().startsWith('default');
-                        const finalCategory = isGenericCategory ? (predicted || currentCategory) : currentCategory;
 
                         return {
                             id: `q_${Date.now()}_${Math.random()}`, ...tempQuestion,
-                            correctAnswerId, category: finalCategory, year: new Date().getFullYear().toString(),
-                            examType: '', topic: finalCategory,
+                            correctAnswerId, 
+                            category: currentCategory, 
+                            year: new Date().getFullYear().toString(),
+                            examType: '', 
+                            topic: currentCategory, 
+                            career: ''
                         };
                     });
 
@@ -541,11 +637,6 @@
                         const question = {};
                         headers.forEach((header, i) => { question[header] = values[i] || ''; });
                         question.id = `q_${Date.now()}_${Math.random()}`;
-                        
-                        if (!question.category) {
-                          const predicted = guessCategoryForQuestion(question);
-                          if (predicted) { question.category = predicted; question.topic = predicted; }
-                        }
                         return question;
                     }).filter(Boolean);
                     
@@ -585,6 +676,14 @@
             }
 
             // --- Event Listeners ---
+            clearAllBtn.addEventListener('click', () => {
+                if(questions.length > 0) {
+                    pushState(questions);
+                    questions = [];
+                    selectedRows.clear();
+                    updateUI();
+                }
+            });
 
             importXmlBtn.addEventListener('click', () => xmlFileInput.click());
             importCsvBtn.addEventListener('click', () => csvFileInput.click());
@@ -598,6 +697,7 @@
                 if (file) {
                     if (file.type === "text/xml") {
                         fileName = file.name.replace(/\.xml$/, '');
+                        appTitle.textContent = fileName;
                         const reader = new FileReader();
                         reader.onload = (ev) => processXmlContent(ev.target.result);
                         reader.readAsText(file);
@@ -611,6 +711,7 @@
                 if (file) {
                     if (file.type === "text/csv" || file.name.endsWith('.csv')) {
                          fileName = file.name.replace(/\.csv$/, '');
+                         appTitle.textContent = fileName;
                         const reader = new FileReader();
                         reader.onload = (ev) => processCsvContent(ev.target.result);
                         reader.readAsText(file);
@@ -685,12 +786,14 @@
                 const examType = globalExamInput.value;
                 const category = globalCategoryInput.value;
                 const topic = globalTopicInput.value;
+                const career = globalCareerInput.value;
 
                 questions.forEach(q => {
                     if (year.trim()) q.year = year;
                     if (examType.trim()) q.examType = examType;
                     if (category.trim()) q.category = category;
                     if (topic.trim()) q.topic = topic;
+                    if (career.trim()) q.career = career;
                 });
                 updateUI();
                 alert("¡Campos actualizados para todas las preguntas!");
@@ -837,7 +940,10 @@
             
             function renderClassifyList(filter = '') {
                 classifyList.innerHTML = '';
-                const filteredCategories = CATEGORIES.filter(cat => cat.toLowerCase().includes(filter.toLowerCase()));
+                const career = questions[currentClassifyIndex]?.career;
+                let categoryList = (career === 'Enfermeria') ? NURSING_CATEGORIES : MEDICINE_CATEGORIES;
+                
+                const filteredCategories = categoryList.filter(cat => cat.toLowerCase().includes(filter.toLowerCase()));
                 
                 filteredCategories.forEach(cat => {
                     const catButton = document.createElement('button');
@@ -931,6 +1037,7 @@
                 document.getElementById('batch-exam').value = '';
                 document.getElementById('batch-category').value = '';
                 document.getElementById('batch-topic').value = '';
+                document.getElementById('batch-career-modal').value = '';
                 batchEditModalContainer.classList.remove('hidden');
             });
 
@@ -941,12 +1048,14 @@
                 const examType = document.getElementById('batch-exam').value;
                 const category = document.getElementById('batch-category').value;
                 const topic = document.getElementById('batch-topic').value;
+                const career = document.getElementById('batch-career-modal').value;
 
                 selectedRows.forEach(index => {
                     if (year.trim()) questions[index].year = year;
                     if (examType.trim()) questions[index].examType = examType;
                     if (category.trim()) questions[index].category = category;
                     if (topic.trim()) questions[index].topic = topic;
+                    if (career.trim()) questions[index].career = career;
                 });
                 
                 batchEditModalContainer.classList.add('hidden');
@@ -960,10 +1069,10 @@
                     currentQuestion[input.dataset.field] = input.value;
                 });
 
-                const predicted = guessCategoryForQuestion(currentQuestion);
-                if (predicted) {
-                    modalContent.querySelector('[data-field="category"]').value = predicted;
-                    modalContent.querySelector('[data-field="topic"]').value = predicted;
+                const predictedCategory = guessCategoryForQuestion(currentQuestion, currentQuestion.career);
+                if (predictedCategory) {
+                    modalContent.querySelector('[data-field="category"]').value = predictedCategory;
+                    modalContent.querySelector('[data-field="topic"]').value = predictedCategory;
                 } else {
                     alert('No se pudo determinar una categoría clara para esta pregunta.');
                 }
@@ -974,15 +1083,15 @@
               pushState(questions);
               let changed = 0;
               questions.forEach(q => {
-                const predicted = guessCategoryForQuestion(q);
-                if (predicted) { 
-                    q.category = predicted; 
-                    q.topic = predicted; 
+                const predictedCategory = guessCategoryForQuestion(q, q.career);
+                if (predictedCategory) { 
+                    q.category = predictedCategory; 
+                    q.topic = predictedCategory; 
                     changed++; 
                 }
               });
               updateUI();
-              alert(`Auto-clasificación aplicada. Filas actualizadas: ${changed}`);
+              alert(`Auto-clasificación de categoría aplicada. Filas actualizadas: ${changed}`);
             });
 
             // --- History (Undo/Redo) and Autosave Logic ---
@@ -1042,7 +1151,8 @@
                     const savedState = localStorage.getItem('moodleQuestionsAutosave');
                     if (savedState) {
                         questions = JSON.parse(savedState);
-                        fileName = localStorage.getItem('moodleFilenameAutosave') || 'exportacion_moodle';
+                        fileName = localStorage.getItem('moodleFilenameAutosave') || 'Editor de Preguntas Moodle';
+                        appTitle.textContent = fileName;
                         pushState(questions);
                     } else {
                         pushState([]);
@@ -1079,6 +1189,7 @@
                            `TIPO_EXAMEN: ${stripHtml(q.examType || '')}\n` +
                            `TEMA: ${stripHtml(q.topic || '')}\n` +
                            `JUSTIFICACION: ${stripHtml(q.justification || '')}\n` +
+                           `CARRERA: ${stripHtml(q.career || '')}\n` +
                            `--------------------`;
                 }).join('\n\n');
             }
@@ -1097,7 +1208,7 @@
                     const fieldMap = {
                         "TEXTO": "text", "A": "option_a", "B": "option_b", "C": "option_c", "D": "option_d",
                         "RESPUESTA": "correctAnswerId", "CATEGORIA": "category", "AÑO": "year",
-                        "TIPO_EXAMEN": "examType", "TEMA": "topic", "JUSTIFICACION": "justification"
+                        "TIPO_EXAMEN": "examType", "TEMA": "topic", "JUSTIFICACION": "justification", "CARRERA": "career"
                     };
 
                     for (const line of lines) {
@@ -1147,9 +1258,127 @@
                     updateUI();
                 }
             });
+            
+            // --- Editable Title Logic ---
+            appTitle.addEventListener('dblclick', () => {
+                const currentTitle = appTitle.textContent;
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.value = currentTitle;
+                input.className = 'text-2xl font-bold text-gray-800 bg-gray-100 border rounded-md p-1 focus:outline-none focus:ring-2 focus:ring-blue-500';
+
+                const saveTitle = () => {
+                    const newTitle = input.value.trim();
+                    if (newTitle) {
+                        fileName = newTitle;
+                        appTitle.textContent = newTitle;
+                    }
+                    titleContainer.innerHTML = '';
+                    titleContainer.appendChild(appTitle);
+                    saveState(true);
+                };
+
+                input.addEventListener('blur', saveTitle);
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        saveTitle();
+                    } else if (e.key === 'Escape') {
+                        titleContainer.innerHTML = '';
+                        titleContainer.appendChild(appTitle);
+                    }
+                });
+
+                titleContainer.innerHTML = '';
+                titleContainer.appendChild(input);
+                input.focus();
+                input.select();
+            });
+
+            // --- Keywords Editor Logic ---
+            function loadKeywords() {
+                const savedMedicine = localStorage.getItem('userMedicineKeywords');
+                const savedNursing = localStorage.getItem('userNursingKeywords');
+
+                userMedicineKeywords = savedMedicine ? JSON.parse(savedMedicine) : { ...MEDICINE_CATEGORY_KEYWORDS };
+                userNursingKeywords = savedNursing ? JSON.parse(savedNursing) : { ...NURSING_CATEGORY_KEYWORDS };
+            }
+
+            function renderKeywordsEditor(career) {
+                keywordsContent.innerHTML = '';
+                const keywordData = career === 'Medicina' ? userMedicineKeywords : userNursingKeywords;
+                
+                const sortedCategories = Object.keys(keywordData).sort();
+
+                sortedCategories.forEach(category => {
+                    const keywords = keywordData[category];
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'flex flex-col';
+
+                    const label = document.createElement('label');
+                    label.className = 'font-semibold text-sm mb-1 text-gray-700';
+                    label.textContent = category;
+
+                    const textarea = document.createElement('textarea');
+                    textarea.className = 'w-full h-24 p-2 border rounded-md text-xs font-mono focus:ring-blue-500 focus:border-blue-500';
+                    textarea.value = keywords.join(', ');
+                    textarea.dataset.category = category;
+                    
+                    wrapper.appendChild(label);
+                    wrapper.appendChild(textarea);
+                    keywordsContent.appendChild(wrapper);
+                });
+            }
+
+            editKeywordsBtn.addEventListener('click', () => {
+                keywordsModalContainer.classList.remove('hidden');
+                renderKeywordsEditor('Medicina');
+                keywordsTabs.querySelector('[data-career="Medicina"]').classList.add('active');
+                keywordsTabs.querySelector('[data-career="Enfermeria"]').classList.remove('active');
+            });
+            
+            keywordsTabs.addEventListener('click', (e) => {
+                const target = e.target.closest('.keyword-tab-btn');
+                if(!target) return;
+                
+                keywordsTabs.querySelectorAll('.keyword-tab-btn').forEach(btn => btn.classList.remove('active'));
+                target.classList.add('active');
+                renderKeywordsEditor(target.dataset.career);
+            });
+
+            keywordsCancelBtn.addEventListener('click', () => keywordsModalContainer.classList.add('hidden'));
+            
+            keywordsSaveBtn.addEventListener('click', () => {
+                const activeTab = keywordsTabs.querySelector('.active');
+                const career = activeTab.dataset.career;
+                const targetDict = career === 'Medicina' ? userMedicineKeywords : userNursingKeywords;
+
+                keywordsContent.querySelectorAll('textarea').forEach(textarea => {
+                    const category = textarea.dataset.category;
+                    const keywords = textarea.value.split(',').map(kw => kw.trim()).filter(Boolean);
+                    targetDict[category] = keywords;
+                });
+                
+                const storageKey = career === 'Medicina' ? 'userMedicineKeywords' : 'userNursingKeywords';
+                localStorage.setItem(storageKey, JSON.stringify(targetDict));
+                
+                alert(`Pistas para ${career} guardadas.`);
+                keywordsModalContainer.classList.add('hidden');
+            });
+
+            keywordsRestoreBtn.addEventListener('click', () => {
+                if (confirm('¿Estás seguro de que quieres restaurar las pistas por defecto para TODAS las carreras? Se perderán tus cambios.')) {
+                    localStorage.removeItem('userMedicineKeywords');
+                    localStorage.removeItem('userNursingKeywords');
+                    loadKeywords();
+                    alert('Pistas restauradas a los valores por defecto.');
+                    const activeTab = keywordsTabs.querySelector('.active');
+                    renderKeywordsEditor(activeTab.dataset.career);
+                }
+            });
 
 
             // --- Initial Render ---
+            loadKeywords();
             loadState();
             renderHeader();
             updateUI();
@@ -1157,3 +1386,4 @@
     </script>
 </body>
 </html>
+
