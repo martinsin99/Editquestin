@@ -54,10 +54,17 @@
                 </div>
                 <p class="text-sm text-gray-500">Virtualizado para Máximo Rendimiento</p>
             </div>
+             <div class="relative w-full sm:w-auto max-w-xs">
+                <input type="text" id="search-input" placeholder="Buscar en preguntas..." class="w-full p-2 pl-10 border rounded-lg text-sm focus:ring-2 focus:ring-blue-400">
+                <svg class="w-5 h-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            </div>
             <div class="flex items-center justify-center flex-wrap gap-2">
                 <button id="toggle-view-btn" class="p-2 rounded-lg hover:bg-gray-200 transition-colors" title="Cambiar Vista">
                     <svg id="table-view-icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18M3 6h18M3 18h18"></path></svg>
                     <svg id="text-view-icon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"></path></svg>
+                </button>
+                <button id="toggle-filters-btn" class="p-2 rounded-lg hover:bg-gray-200 transition-colors" title="Mostrar/Ocultar Filtros">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L16 11.414V16a1 1 0 01-.293.707l-2 2A1 1 0 0113 18v-1.586l-1.707-1.707A1 1 0 0111 14V11.414L3.293 6.707A1 1 0 013 6V4z"></path></svg>
                 </button>
                 <button id="undo-btn" class="p-2 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" title="Deshacer (Ctrl+Z)" disabled>
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 15l-3-3m0 0l3-3m-3 3h8A5 5 0 009 9V5"></path></svg>
@@ -106,7 +113,7 @@
     <main class="flex-grow p-2 sm:p-4 lg:p-6 flex flex-col overflow-hidden">
         <div id="error-container" class="hidden max-w-screen-2xl mx-auto bg-red-100 border-red-400 text-red-700 px-4 py-3 rounded-lg mb-4"></div>
         <div id="table-view" class="flex-grow flex flex-col bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
-            <!-- Encabezado de la Tabla -->
+            <!-- Encabezado de la Tabla y Filtros -->
             <div id="table-header" class="overflow-x-auto hide-scrollbar border-b border-gray-200"></div>
             <!-- Cuerpo de la Tabla (Virtualizado) -->
             <div id="table-body-container" class="flex-grow w-full h-full overflow-auto">
@@ -137,7 +144,11 @@
             <header class="p-4 border-b flex justify-between items-center"><h2 id="modal-title" class="text-xl font-bold text-gray-800">Editar Pregunta</h2></header>
             <main id="modal-content" class="p-6 overflow-y-auto"></main>
             <footer class="p-4 border-t flex flex-col sm:flex-row justify-between items-center gap-4 bg-gray-50 rounded-b-xl">
-                <div>
+                <div class="flex items-center gap-2">
+                    <button id="modal-delete-btn" class="px-4 py-2 bg-red-500 text-white font-semibold rounded-lg hover:bg-red-600">
+                        <svg class="w-5 h-5 inline-block -mt-1 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        Eliminar Pregunta
+                    </button>
                     <button id="modal-autoclassify-btn" class="px-4 py-2 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700">Auto-clasificar Categoría</button>
                 </div>
                 <div class="flex items-center gap-2">
@@ -225,6 +236,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             // --- State Management ---
             let questions = [];
+            let filteredIndices = [];
             let fileName = 'exportacion_moodle';
             let editingQuestionIndex = null;
             let debounceTimers = {};
@@ -232,6 +244,10 @@
             let history = [];
             let historyIndex = -1;
             let currentView = 'table'; // 'table' or 'text'
+            let filters = {};
+            let searchTerm = '';
+            let showFilters = false;
+            let lastCheckedIndex = null;
 
             // --- DOM Elements ---
             const importXmlBtn = document.getElementById('import-xml-btn');
@@ -274,6 +290,7 @@
             const modalPrevBtn = document.getElementById('modal-prev');
             const modalNextBtn = document.getElementById('modal-next');
             const modalAutoclassifyBtn = document.getElementById('modal-autoclassify-btn');
+            const modalDeleteBtn = document.getElementById('modal-delete-btn');
             const classifyPopup = document.getElementById('classify-popup');
             const classifySearch = document.getElementById('classify-search');
             const classifyList = document.getElementById('classify-list');
@@ -296,6 +313,8 @@
             const keywordsSaveBtn = document.getElementById('keywords-save-btn');
             const keywordsCancelBtn = document.getElementById('keywords-cancel-btn');
             const keywordsRestoreBtn = document.getElementById('keywords-restore-btn');
+            const searchInput = document.getElementById('search-input');
+            const toggleFiltersBtn = document.getElementById('toggle-filters-btn');
             
             // --- Table & Virtualization Config ---
             const TABLE_HEADERS = [
@@ -406,22 +425,46 @@
 
             function renderHeader() {
                 tableHeader.innerHTML = '';
-                const headerContent = document.createElement('div');
-                headerContent.className = 'flex items-center bg-gray-50 font-medium text-xs text-gray-500 uppercase tracking-wider';
-                headerContent.style.width = `${totalWidth}px`;
+                
+                // Title Row
+                const titleContent = document.createElement('div');
+                titleContent.className = 'flex items-center bg-gray-50 font-medium text-xs text-gray-500 uppercase tracking-wider';
+                titleContent.style.width = `${totalWidth}px`;
 
                 TABLE_HEADERS.forEach(h => {
                     const cell = document.createElement('div');
                     cell.className = 'px-3 py-3 border-r border-gray-200 flex items-center justify-center';
                     cell.style.flex = `0 0 ${h.width}px`;
                     cell.innerHTML = h.label;
-                    headerContent.appendChild(cell);
+                    titleContent.appendChild(cell);
                 });
-                tableHeader.appendChild(headerContent);
+                tableHeader.appendChild(titleContent);
+                
+                // Filter Row
+                const filterContent = document.createElement('div');
+                filterContent.id = 'filter-row';
+                filterContent.className = `flex items-center bg-gray-100 p-1 ${showFilters ? '' : 'hidden'}`;
+                filterContent.style.width = `${totalWidth}px`;
+                TABLE_HEADERS.forEach(h => {
+                    const cell = document.createElement('div');
+                    cell.className = 'px-1';
+                    cell.style.flex = `0 0 ${h.width}px`;
+                    if (!['select', 'rowNum', 'actions'].includes(h.key)) {
+                        const input = document.createElement('input');
+                        input.type = 'text';
+                        input.placeholder = `Filtrar...`;
+                        input.className = 'w-full p-1 border rounded-md text-xs filter-input';
+                        input.dataset.key = h.key;
+                        input.value = filters[h.key] || '';
+                        cell.appendChild(input);
+                    }
+                    filterContent.appendChild(cell);
+                });
+                tableHeader.appendChild(filterContent);
                 
                 document.getElementById('select-all-checkbox').addEventListener('change', (e) => {
                     if (e.target.checked) {
-                        selectedRows = new Set(questions.map((_, i) => i));
+                        selectedRows = new Set(filteredIndices);
                     } else {
                         selectedRows.clear();
                     }
@@ -435,19 +478,20 @@
                 const containerHeight = tableBodyContainer.clientHeight;
                 
                 const startIndex = Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - OVERSCAN_COUNT);
-                const endIndex = Math.min(questions.length, Math.ceil((scrollTop + containerHeight) / ROW_HEIGHT) + OVERSCAN_COUNT);
+                const endIndex = Math.min(filteredIndices.length, Math.ceil((scrollTop + containerHeight) / ROW_HEIGHT) + OVERSCAN_COUNT);
 
-                tableBodySizer.style.height = `${questions.length * ROW_HEIGHT}px`;
+                tableBodySizer.style.height = `${filteredIndices.length * ROW_HEIGHT}px`;
                 tableBody.innerHTML = '';
 
                 for (let i = startIndex; i < endIndex; i++) {
-                    const question = questions[i];
+                    const originalIndex = filteredIndices[i];
+                    const question = questions[originalIndex];
                     const row = document.createElement('div');
-                    const isSelected = selectedRows.has(i);
+                    const isSelected = selectedRows.has(originalIndex);
                     row.className = `absolute top-0 left-0 w-full ${isSelected ? 'selected-row' : ''}`;
                     row.style.top = `${i * ROW_HEIGHT}px`;
                     row.style.height = `${ROW_HEIGHT}px`;
-                    row.dataset.index = i;
+                    row.dataset.index = originalIndex;
 
                     const rowContent = document.createElement('div');
                     rowContent.className = 'flex items-stretch border-b border-gray-200 h-full';
@@ -496,17 +540,43 @@
                 tableBodySizer.style.height = 'auto';
                 tableBody.innerHTML = `<div class="flex items-center justify-center h-full p-16"><div class="text-center"><h3 class="text-lg font-medium text-gray-600">Aún no hay preguntas</h3><p class="text-gray-500 mt-1">Haz clic en "Importar" para comenzar.</p></div></div>`;
             }
+            
+            function applyFiltersAndSearch() {
+                const normalizedSearchTerm = normalize(searchTerm);
+
+                filteredIndices = questions
+                    .map((_, index) => index)
+                    .filter(index => {
+                        const q = questions[index];
+                        
+                        if (normalizedSearchTerm) {
+                            const searchableString = normalize(Object.values(q).join(' '));
+                            if (!searchableString.includes(normalizedSearchTerm)) return false;
+                        }
+
+                        for (const key in filters) {
+                            const filterValue = normalize(filters[key]);
+                            if (filterValue && !normalize(q[key]).includes(filterValue)) return false;
+                        }
+                        return true;
+                    });
+                
+                updateUI();
+            }
 
             function updateUI() {
-                const hasQuestions = questions.length > 0;
-                exportBtn.disabled = !hasQuestions;
+                const hasVisibleQuestions = filteredIndices.length > 0;
+                exportBtn.disabled = !hasVisibleQuestions;
                 
-                if (hasQuestions) {
+                if (hasVisibleQuestions) {
                     if (currentView === 'table') {
                         renderVirtualRows();
                     } else {
-                        renderTextView();
+                        renderTextView(true); // pass flag to use filtered data
                     }
+                } else if (questions.length > 0 && !hasVisibleQuestions) {
+                    tableBodySizer.style.height = 'auto';
+                    tableBody.innerHTML = `<div class="flex items-center justify-center h-full p-16"><div class="text-center"><h3 class="text-lg font-medium text-gray-600">No se encontraron resultados</h3><p class="text-gray-500 mt-1">Intenta ajustar tu búsqueda o filtros.</p></div></div>`;
                 } else {
                     renderEmptyState();
                 }
@@ -580,12 +650,12 @@
                     }
                     selectedRows.clear();
                     pushState(questions);
-                    updateUI();
+                    applyFiltersAndSearch();
                 } catch (e) {
                     console.error("XML Parsing Error:", e);
                     showError(e.message || "Ocurrió un error desconocido al procesar el archivo.");
                     questions = [];
-                    updateUI();
+                    applyFiltersAndSearch();
                 }
             }
             
@@ -650,7 +720,7 @@
                     }
                     
                     hideError();
-                    updateUI();
+                    applyFiltersAndSearch();
 
                 } catch(e) {
                     console.error("CSV Parsing Error:", e);
@@ -660,13 +730,13 @@
 
 
             function exportToCsv() {
-                if (questions.length === 0) return;
+                if (filteredIndices.length === 0) return;
                 const headers = TABLE_HEADERS.filter(h => !['actions', 'rowNum', 'select'].includes(h.key)).map(h => h.key);
                 const sanitize = (data) => {
                     let text = (data || '').toString().replace(/<[^>]*>/g, '').replace(/"/g, '""');
                     return /[,"]|\n/.test(text) ? `"${text}"` : text;
                 };
-                const csvRows = [headers.join(','), ...questions.map(q => headers.map(h => sanitize(q[h])).join(','))];
+                const csvRows = [headers.join(','), ...filteredIndices.map(i => headers.map(h => sanitize(questions[i][h])).join(','))];
                 const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
                 const link = document.createElement("a");
                 link.href = URL.createObjectURL(blob);
@@ -681,7 +751,7 @@
                     pushState(questions);
                     questions = [];
                     selectedRows.clear();
-                    updateUI();
+                    applyFiltersAndSearch();
                 }
             });
 
@@ -752,11 +822,24 @@
                 const index = parseInt(rowElement.dataset.index, 10);
 
                 if (e.target.classList.contains('row-checkbox')) {
-                    if (e.target.checked) {
-                        selectedRows.add(index);
+                    const isChecked = e.target.checked;
+                    if (e.shiftKey && lastCheckedIndex !== null) {
+                        const lastPos = filteredIndices.indexOf(lastCheckedIndex);
+                        const currentPos = filteredIndices.indexOf(index);
+                        if (lastPos > -1 && currentPos > -1) {
+                            const start = Math.min(lastPos, currentPos);
+                            const end = Math.max(lastPos, currentPos);
+                            for (let i = start; i <= end; i++) {
+                                const originalIdx = filteredIndices[i];
+                                if (isChecked) selectedRows.add(originalIdx);
+                                else selectedRows.delete(originalIdx);
+                            }
+                        }
                     } else {
-                        selectedRows.delete(index);
+                        if (isChecked) selectedRows.add(index);
+                        else selectedRows.delete(index);
                     }
+                    lastCheckedIndex = index;
                     updateAdvancedToolbar();
                     renderVirtualRows();
                 }
@@ -772,7 +855,33 @@
                         else if (i < index) newSelectedRows.add(i);
                     });
                     selectedRows = newSelectedRows;
-                    updateUI();
+                    applyFiltersAndSearch();
+                }
+            });
+            
+            searchInput.addEventListener('input', (e) => {
+                searchTerm = e.target.value;
+                applyFiltersAndSearch();
+            });
+
+            toggleFiltersBtn.addEventListener('click', () => {
+                showFilters = !showFilters;
+                renderHeader(); // Re-render to show/hide filter row
+                if(showFilters) {
+                    tableHeader.querySelector('.filter-input').focus();
+                }
+            });
+
+            tableHeader.addEventListener('input', (e) => {
+                if (e.target.classList.contains('filter-input')) {
+                    const key = e.target.dataset.key;
+                    const value = e.target.value;
+                    if (value) {
+                        filters[key] = value;
+                    } else {
+                        delete filters[key];
+                    }
+                    applyFiltersAndSearch();
                 }
             });
 
@@ -795,7 +904,7 @@
                     if (topic.trim()) q.topic = topic;
                     if (career.trim()) q.career = career;
                 });
-                updateUI();
+                applyFiltersAndSearch();
                 alert("¡Campos actualizados para todas las preguntas!");
             });
 
@@ -875,7 +984,7 @@
             function closeModal() {
                 modalContainer.classList.add('hidden');
                 editingQuestionIndex = null;
-                updateUI();
+                applyFiltersAndSearch();
             }
 
             modalSaveBtn.addEventListener('click', () => {
@@ -886,6 +995,21 @@
             modalCancelBtn.addEventListener('click', closeModal);
             modalContainer.addEventListener('click', (e) => {
                 if (e.target === modalContainer) closeModal();
+            });
+
+            modalDeleteBtn.addEventListener('click', () => {
+                if (editingQuestionIndex !== null) {
+                    pushState(questions);
+                    questions.splice(editingQuestionIndex, 1);
+                    selectedRows.delete(editingQuestionIndex);
+                    const newSelectedRows = new Set();
+                    selectedRows.forEach(i => {
+                        if (i > editingQuestionIndex) newSelectedRows.add(i - 1);
+                        else if (i < editingQuestionIndex) newSelectedRows.add(i);
+                    });
+                    selectedRows = newSelectedRows;
+                    closeModal();
+                }
             });
             
             modalContent.addEventListener('click', (e) => {
@@ -898,16 +1022,30 @@
             modalPrevBtn.addEventListener('click', () => {
                 if (editingQuestionIndex > 0) {
                     saveCurrentModalState();
-                    editingQuestionIndex--;
-                    renderModalContent();
+                    const currentScroll = tableBodyContainer.scrollTop;
+                    applyFiltersAndSearch(); // Re-apply to keep view consistent
+                    tableBodyContainer.scrollTop = currentScroll;
+
+                    const prevFilteredIndex = filteredIndices.indexOf(editingQuestionIndex) - 1;
+                    if(prevFilteredIndex >= 0) {
+                        editingQuestionIndex = filteredIndices[prevFilteredIndex];
+                        renderModalContent();
+                    }
                 }
             });
 
             modalNextBtn.addEventListener('click', () => {
                 if (editingQuestionIndex < questions.length - 1) {
                     saveCurrentModalState();
-                    editingQuestionIndex++;
-                    renderModalContent();
+                    const currentScroll = tableBodyContainer.scrollTop;
+                    applyFiltersAndSearch();
+                    tableBodyContainer.scrollTop = currentScroll;
+                    
+                    const nextFilteredIndex = filteredIndices.indexOf(editingQuestionIndex) + 1;
+                    if(nextFilteredIndex < filteredIndices.length){
+                        editingQuestionIndex = filteredIndices[nextFilteredIndex];
+                        renderModalContent();
+                    }
                 }
             });
             
@@ -1003,7 +1141,7 @@
                     } else {
                         questions[currentClassifyIndex].category = selectedCategory;
                         questions[currentClassifyIndex].topic = selectedCategory;
-                        updateUI();
+                        applyFiltersAndSearch();
                     }
                     hideClassifyPopup();
                 }
@@ -1029,7 +1167,7 @@
                 pushState(questions);
                 questions = questions.filter((_, index) => !selectedRows.has(index));
                 selectedRows.clear();
-                updateUI();
+                applyFiltersAndSearch();
             });
 
             batchEditBtn.addEventListener('click', () => {
@@ -1059,7 +1197,7 @@
                 });
                 
                 batchEditModalContainer.classList.add('hidden');
-                updateUI();
+                applyFiltersAndSearch();
             });
             
             modalAutoclassifyBtn.addEventListener('click', () => {
@@ -1090,7 +1228,7 @@
                     changed++; 
                 }
               });
-              updateUI();
+              applyFiltersAndSearch();
               alert(`Auto-clasificación de categoría aplicada. Filas actualizadas: ${changed}`);
             });
 
@@ -1111,7 +1249,7 @@
                 if (historyIndex > 0) {
                     historyIndex--;
                     questions = JSON.parse(JSON.stringify(history[historyIndex]));
-                    updateUI();
+                    applyFiltersAndSearch();
                     updateUndoRedoButtons();
                 }
             }
@@ -1120,7 +1258,7 @@
                 if (historyIndex < history.length - 1) {
                     historyIndex++;
                     questions = JSON.parse(JSON.stringify(history[historyIndex]));
-                    updateUI();
+                    applyFiltersAndSearch();
                     updateUndoRedoButtons();
                 }
             }
@@ -1175,8 +1313,9 @@
 
 
             // --- View Toggling Logic ---
-            function questionsToPlainText() {
-                return questions.map((q, i) => {
+            function questionsToPlainText(useFiltered = false) {
+                const questionsToConvert = useFiltered ? filteredIndices.map(i => questions[i]) : questions;
+                return questionsToConvert.map((q, i) => {
                     return `## PREGUNTA ${i + 1} ##\n` +
                            `TEXTO: ${stripHtml(q.text || '')}\n` +
                            `A: ${stripHtml(q.option_a || '')}\n` +
@@ -1192,6 +1331,10 @@
                            `CARRERA: ${stripHtml(q.career || '')}\n` +
                            `--------------------`;
                 }).join('\n\n');
+            }
+            
+            function renderTextView(useFiltered = false){
+                 textViewArea.value = questionsToPlainText(useFiltered);
             }
 
             function plainTextToQuestions(text) {
@@ -1239,15 +1382,13 @@
 
             toggleViewBtn.addEventListener('click', () => {
                 if (currentView === 'table') {
-                    // Switch to text view
-                    textViewArea.value = questionsToPlainText();
+                    renderTextView(true);
                     tableView.classList.add('hidden');
                     textView.classList.remove('hidden');
                     tableViewIcon.classList.add('hidden');
                     textViewIcon.classList.remove('hidden');
                     currentView = 'text';
                 } else {
-                    // Switch to table view
                     pushState(questions);
                     questions = plainTextToQuestions(textViewArea.value);
                     textView.classList.add('hidden');
@@ -1255,7 +1396,7 @@
                     textViewIcon.classList.add('hidden');
                     tableViewIcon.classList.remove('hidden');
                     currentView = 'table';
-                    updateUI();
+                    applyFiltersAndSearch();
                 }
             });
             
@@ -1381,7 +1522,7 @@
             loadKeywords();
             loadState();
             renderHeader();
-            updateUI();
+            applyFiltersAndSearch();
         });
     </script>
 </body>
