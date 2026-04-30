@@ -101,6 +101,7 @@
                 <h3 class="font-semibold text-gray-700 col-span-full">Edición Masiva:</h3>
                 <div><label class="block text-xs font-medium text-gray-600">Año</label><input type="text" id="global-year" placeholder="Ej: 2025" class="p-2 border rounded-md text-sm w-full"/></div>
                 <div><label class="block text-xs font-medium text-gray-600">Tipo de Examen</label><input type="text" id="global-exam" placeholder="Ej: Parcial 1" class="p-2 border rounded-md text-sm w-full"/></div>
+                <div><label class="block text-xs font-medium text-gray-600">Dificultad</label><input type="text" id="global-difficulty" placeholder="facil, medio, dificil" class="p-2 border rounded-md text-sm w-full"/></div>
                 <div><label class="block text-xs font-medium text-gray-600">Categoría/Materia</label><input type="text" id="global-category" placeholder="Ej: Medicina" class="p-2 border rounded-md text-sm w-full"/></div>
                 <div><label class="block text-xs font-medium text-gray-600">Tema</label><input type="text" id="global-topic" placeholder="Ej: Cardiología" class="p-2 border rounded-md text-sm w-full"/></div>
                 <div><label class="block text-xs font-medium text-gray-600">Carrera</label><input type="text" id="global-career" placeholder="Medicina" class="p-2 border rounded-md text-sm w-full"/></div>
@@ -169,7 +170,7 @@
             <header class="p-4 border-b"><h2 class="text-xl font-bold text-gray-800">Pegar Contenido CSV</h2></header>
             <main class="p-6">
                 <p class="text-sm text-gray-600 mb-2">Pega aquí las filas de tu CSV. Asegúrate de que el formato y las columnas coincidan con la exportación.</p>
-                <textarea id="paste-csv-area" class="w-full h-64 p-2 border rounded-md font-mono text-sm" placeholder="text,option_a,option_b,...,career"></textarea>
+                <textarea id="paste-csv-area" class="w-full h-64 p-2 border rounded-md font-mono text-sm" placeholder="text,option_a,option_b,option_c,option_d,option_e,correctAnswerId,difficulty,category,examType,career,topic,year,justification"></textarea>
             </main>
             <footer class="p-4 border-t flex justify-end space-x-3 bg-gray-50 rounded-b-xl">
                 <button id="paste-cancel-btn" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">Cancelar</button>
@@ -186,6 +187,7 @@
                 <p class="text-sm text-gray-600">Introduce los valores que quieres aplicar a todas las filas seleccionadas. Deja un campo en blanco para no modificarlo.</p>
                 <div><label class="block text-xs font-medium text-gray-600">Año</label><input type="text" id="batch-year" placeholder="Ej: 2025" class="p-2 border rounded-md text-sm w-full"/></div>
                 <div><label class="block text-xs font-medium text-gray-600">Tipo de Examen</label><input type="text" id="batch-exam" placeholder="Ej: Parcial 1" class="p-2 border rounded-md text-sm w-full"/></div>
+                <div><label class="block text-xs font-medium text-gray-600">Dificultad</label><input type="text" id="batch-difficulty" placeholder="facil, medio, dificil" class="p-2 border rounded-md text-sm w-full"/></div>
                 <div><label class="block text-xs font-medium text-gray-600">Categoría/Materia</label><input type="text" id="batch-category" placeholder="Ej: Medicina" class="p-2 border rounded-md text-sm w-full"/></div>
                 <div><label class="block text-xs font-medium text-gray-600">Tema</label><input type="text" id="batch-topic" placeholder="Ej: Cardiología" class="p-2 border rounded-md text-sm w-full"/></div>
                 <div><label class="block text-xs font-medium text-gray-600">Carrera</label><input type="text" id="batch-career-modal" placeholder="Medicina" class="p-2 border rounded-md text-sm w-full"/></div>
@@ -278,6 +280,7 @@
             const appTitle = document.getElementById('app-title');
             const globalYearInput = document.getElementById('global-year');
             const globalExamInput = document.getElementById('global-exam');
+            const globalDifficultyInput = document.getElementById('global-difficulty');
             const globalCategoryInput = document.getElementById('global-category');
             const globalTopicInput = document.getElementById('global-topic');
             const globalCareerInput = document.getElementById('global-career');
@@ -323,11 +326,16 @@
                 { key: 'actions', label: 'Acciones', width: 80 }, { key: 'text', label: 'Texto de la Pregunta', width: 350 },
                 { key: 'option_a', label: 'Opción A', width: 200 }, { key: 'option_b', label: 'Opción B', width: 200 },
                 { key: 'option_c', label: 'Opción C', width: 200 }, { key: 'option_d', label: 'Opción D', width: 200 },
-                { key: 'correctAnswerId', label: 'Resp. Correcta', width: 120 }, { key: 'category', label: 'Categoría', width: 150 },
-                { key: 'year', label: 'Año', width: 100 }, { key: 'examType', label: 'Tipo Examen', width: 150 },
-                { key: 'topic', label: 'Tema', width: 150 }, { key: 'justification', label: 'Justificación', width: 400 },
-                { key: 'career', label: 'Carrera', width: 150 }
+                { key: 'option_e', label: 'Opción E', width: 200 },
+                { key: 'correctAnswerId', label: 'Resp. Correcta', width: 120 }, { key: 'difficulty', label: 'Dificultad', width: 120 },
+                { key: 'category', label: 'Categoría', width: 150 }, { key: 'examType', label: 'Tipo Examen', width: 150 },
+                { key: 'career', label: 'Carrera', width: 150 }, { key: 'topic', label: 'Tema', width: 150 },
+                { key: 'year', label: 'Año', width: 100 }, { key: 'justification', label: 'Justificación', width: 400 }
             ];
+            const CSV_HEADERS = ['text', 'option_a', 'option_b', 'option_c', 'option_d', 'option_e', 'correctAnswerId', 'difficulty', 'category', 'examType', 'career', 'topic', 'year', 'justification'];
+            const LEGACY_CSV_HEADERS = ['text', 'option_a', 'option_b', 'option_c', 'option_d', 'correctAnswerId', 'category', 'year', 'examType', 'topic', 'justification', 'career'];
+            const LEGACY_CSV_HEADERS_WITH_OPTION_E = ['text', 'option_a', 'option_b', 'option_c', 'option_d', 'option_e', 'correctAnswerId', 'category', 'year', 'examType', 'topic', 'justification', 'career'];
+            const CSV_HEADER_LINE = CSV_HEADERS.join(',');
             const ROW_HEIGHT = 95;
             const OVERSCAN_COUNT = 5;
             const totalWidth = TABLE_HEADERS.reduce((acc, h) => acc + h.width, 0);
@@ -400,7 +408,7 @@
             }
             
             function guessCategoryForQuestion(q, career) {
-                const text = normalize(stripHtml([q.text, q.option_a, q.option_b, q.option_c, q.option_d, q.justification].join(" ")));
+                const text = normalize(stripHtml([q.text, q.option_a, q.option_b, q.option_c, q.option_d, q.option_e, q.justification].join(" ")));
                 let keywordSet = {};
                 let careerNormalized = (career || "").toLowerCase();
 
@@ -627,12 +635,14 @@
                           text: questionTextNode?.textContent || '',
                           option_a: options[0] || '', option_b: options[1] || '',
                           option_c: options[2] || '', option_d: options[3] || '',
+                          option_e: options[4] || '',
                           justification: justificationNode?.textContent || ''
                         };
 
                         return {
                             id: `q_${Date.now()}_${Math.random()}`, ...tempQuestion,
                             correctAnswerId, 
+                            difficulty: '',
                             category: currentCategory, 
                             year: new Date().getFullYear().toString(),
                             examType: '', 
@@ -695,17 +705,22 @@
                         headers = headers.map(h => h.trim().replace(/"/g, ''));
                     }
 
-                    const requiredHeaders = TABLE_HEADERS.filter(h => !['actions', 'rowNum', 'select'].includes(h.key)).map(h => h.key);
+                    const acceptedHeaderSets = [CSV_HEADERS, LEGACY_CSV_HEADERS, LEGACY_CSV_HEADERS_WITH_OPTION_E];
+                    const matchedHeaders = acceptedHeaderSets.find(headerSet => headers && headers.length === headerSet.length && headerSet.every((h, i) => headers[i] === h));
 
-                    if (!headers || headers.length !== requiredHeaders.length || !requiredHeaders.every((h, i) => headers[i] === h)) {
-                        throw new Error("El archivo CSV no tiene el formato o las cabeceras correctas. El orden debe ser: " + requiredHeaders.join(', '));
+                    if (!matchedHeaders) {
+                        throw new Error("El archivo CSV no tiene el formato o las cabeceras correctas. El orden debe ser: " + CSV_HEADERS.join(','));
                     }
 
                     const parsedQuestions = data.map(values => {
                         if (values.length === 0 || (values.length === 1 && values[0] === '')) return null;
+                        if (values.length === headers.length && values.every((value, i) => value.trim() === headers[i])) return null;
                         if (values.length !== headers.length) { console.warn("Skipping malformed row:", values); return null; }
                         const question = {};
                         headers.forEach((header, i) => { question[header] = values[i] || ''; });
+                        CSV_HEADERS.forEach(header => {
+                            if (question[header] === undefined) question[header] = '';
+                        });
                         question.id = `q_${Date.now()}_${Math.random()}`;
                         return question;
                     }).filter(Boolean);
@@ -731,12 +746,12 @@
 
             function exportToCsv() {
                 if (filteredIndices.length === 0) return;
-                const headers = TABLE_HEADERS.filter(h => !['actions', 'rowNum', 'select'].includes(h.key)).map(h => h.key);
-                const sanitize = (data) => {
+                const headers = CSV_HEADERS;
+                const formatCsvValue = (data, header) => {
                     let text = (data || '').toString().replace(/<[^>]*>/g, '').replace(/"/g, '""');
-                    return /[,"]|\n/.test(text) ? `"${text}"` : text;
+                    return header === 'year' ? text : `"${text}"`;
                 };
-                const csvRows = [headers.join(','), ...filteredIndices.map(i => headers.map(h => sanitize(questions[i][h])).join(','))];
+                const csvRows = [headers.join(','), ...filteredIndices.map(i => headers.map(h => formatCsvValue(questions[i][h], h)).join(','))];
                 const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
                 const link = document.createElement("a");
                 link.href = URL.createObjectURL(blob);
@@ -760,6 +775,7 @@
             importPasteBtn.addEventListener('click', () => {
                 pasteCsvArea.value = '';
                 pasteModalContainer.classList.remove('hidden');
+                pasteCsvArea.focus();
             });
 
             xmlFileInput.addEventListener('change', (e) => {
@@ -893,6 +909,7 @@
                 pushState(questions);
                 const year = globalYearInput.value;
                 const examType = globalExamInput.value;
+                const difficulty = globalDifficultyInput.value;
                 const category = globalCategoryInput.value;
                 const topic = globalTopicInput.value;
                 const career = globalCareerInput.value;
@@ -900,6 +917,7 @@
                 questions.forEach(q => {
                     if (year.trim()) q.year = year;
                     if (examType.trim()) q.examType = examType;
+                    if (difficulty.trim()) q.difficulty = difficulty;
                     if (category.trim()) q.category = category;
                     if (topic.trim()) q.topic = topic;
                     if (career.trim()) q.career = career;
@@ -1173,6 +1191,7 @@
             batchEditBtn.addEventListener('click', () => {
                 document.getElementById('batch-year').value = '';
                 document.getElementById('batch-exam').value = '';
+                document.getElementById('batch-difficulty').value = '';
                 document.getElementById('batch-category').value = '';
                 document.getElementById('batch-topic').value = '';
                 document.getElementById('batch-career-modal').value = '';
@@ -1184,6 +1203,7 @@
                 pushState(questions);
                 const year = document.getElementById('batch-year').value;
                 const examType = document.getElementById('batch-exam').value;
+                const difficulty = document.getElementById('batch-difficulty').value;
                 const category = document.getElementById('batch-category').value;
                 const topic = document.getElementById('batch-topic').value;
                 const career = document.getElementById('batch-career-modal').value;
@@ -1191,6 +1211,7 @@
                 selectedRows.forEach(index => {
                     if (year.trim()) questions[index].year = year;
                     if (examType.trim()) questions[index].examType = examType;
+                    if (difficulty.trim()) questions[index].difficulty = difficulty;
                     if (category.trim()) questions[index].category = category;
                     if (topic.trim()) questions[index].topic = topic;
                     if (career.trim()) questions[index].career = career;
@@ -1322,13 +1343,15 @@
                            `B: ${stripHtml(q.option_b || '')}\n` +
                            `C: ${stripHtml(q.option_c || '')}\n` +
                            `D: ${stripHtml(q.option_d || '')}\n` +
+                           `${q.option_e ? `E: ${stripHtml(q.option_e || '')}\n` : ''}` +
                            `RESPUESTA: ${stripHtml(q.correctAnswerId || '')}\n` +
+                           `DIFICULTAD: ${stripHtml(q.difficulty || '')}\n` +
                            `CATEGORIA: ${stripHtml(q.category || '')}\n` +
-                           `AÑO: ${stripHtml(q.year || '')}\n` +
                            `TIPO_EXAMEN: ${stripHtml(q.examType || '')}\n` +
-                           `TEMA: ${stripHtml(q.topic || '')}\n` +
-                           `JUSTIFICACION: ${stripHtml(q.justification || '')}\n` +
                            `CARRERA: ${stripHtml(q.career || '')}\n` +
+                           `TEMA: ${stripHtml(q.topic || '')}\n` +
+                           `AÑO: ${stripHtml(q.year || '')}\n` +
+                           `JUSTIFICACION: ${stripHtml(q.justification || '')}\n` +
                            `--------------------`;
                 }).join('\n\n');
             }
@@ -1349,8 +1372,8 @@
                     let currentField = null;
                     
                     const fieldMap = {
-                        "TEXTO": "text", "A": "option_a", "B": "option_b", "C": "option_c", "D": "option_d",
-                        "RESPUESTA": "correctAnswerId", "CATEGORIA": "category", "AÑO": "year",
+                        "TEXTO": "text", "A": "option_a", "B": "option_b", "C": "option_c", "D": "option_d", "E": "option_e",
+                        "RESPUESTA": "correctAnswerId", "DIFICULTAD": "difficulty", "CATEGORIA": "category", "AÑO": "year",
                         "TIPO_EXAMEN": "examType", "TEMA": "topic", "JUSTIFICACION": "justification", "CARRERA": "career"
                     };
 
@@ -1527,4 +1550,3 @@
     </script>
 </body>
 </html>
-
